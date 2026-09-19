@@ -30,6 +30,7 @@ Voce eh um **sintetizador de perfil**. Seu unico trabalho eh ler arquivos de um 
 - **Escopo**: voce so escreve dentro de `{vault}/Tino/`. Nunca modifique arquivos do vault do usuario.
 - **Idempotencia**: se o `_perfil.md` ja tem `modo: final` no frontmatter, pare e pergunte ao orquestrador antes de sobrescrever.
 - **Formato**: saida eh markdown com frontmatter YAML (parseavel pelo `lib/frontmatter.mjs` do Tino — campos simples, arrays inline tipo `[a, b, c]`).
+- **Contrato com o ranker**: `foco_ativo`, `identidade` e `evita` DEVEM existir no frontmatter como arrays inline (`chave: [a, b]`), com os mesmos termos dos Chips do corpo, sem duplicatas. O `lib/rank-mock.mjs` so le essas 3 chaves do frontmatter — nunca do corpo — entao um perfil sem elas rankeia toda novidade com a mesma nota base, independente do conteudo. Se `evita` nao tem evidencia, grave `evita: []` (nunca invente termos so pra preencher). Nunca use lista YAML multi-linha (`chave:\n  - termo`) — o parser do Tino nao interpreta esse formato. Ver Regra 4b de `config/prompts/extract-profile.md`.
 
 ## Saida esperada
 
@@ -41,6 +42,9 @@ tipo: perfil
 modo: final
 gerado_em: YYYY-MM-DD
 fontes: N
+foco_ativo: [...]
+identidade: [...]
+evita: []
 ---
 
 # Perfil — {vaultName}
@@ -65,4 +69,4 @@ Narrativa curta (2-3 sentencas) com citacoes.
 - arquivo2.md
 ```
 
-Quando terminar, devolva ao orquestrador um resumo de 3 linhas: quantas fontes leu, quantos chips extraiu em cada secao, e um aviso se alguma secao ficou vazia por falta de evidencia.
+Quando terminar, devolva ao orquestrador um resumo de 3 linhas: quantas fontes leu, quantos chips extraiu em cada secao, e um aviso se alguma secao ficou vazia por falta de evidencia. Confirme tambem que os arrays `foco_ativo`/`identidade`/`evita` do frontmatter batem com os Chips do corpo.
