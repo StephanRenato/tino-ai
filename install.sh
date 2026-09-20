@@ -4,9 +4,10 @@
 # O que faz:
 #   1. Resolve TINO_HOME (este diretório) e salva em ~/.tino/config.sh
 #   2. Symlinka .claude/commands/tino-*.md    → ~/.claude/commands/
-#   3. Symlinka .claude/agents/profile-extractor.md, ranker.md, deep-diver.md → ~/.claude/agents/
-#   4. Symlinka bin/tino → ~/.local/bin/tino (entra no PATH)
-#   5. Instala deps do Node (npm install) se node_modules não existir
+#   3. Symlinka .claude/agents/{profile-extractor,ranker,deep-diver,pre-dev-*}.md → ~/.claude/agents/
+#   4. Symlinka .claude/skills/tino-*/        → ~/.claude/skills/ (skills auto-trigger)
+#   5. Symlinka bin/tino → ~/.local/bin/tino (entra no PATH)
+#   6. Instala deps do Node (npm install) se node_modules não existir
 #
 # Reversível via uninstall.sh.
 
@@ -56,7 +57,7 @@ for f in "$TINO_HOME"/.claude/agents/*.md; do
   base="$(basename "$f")"
   # só os agents do Tino (não symlinkar outros que caiam na pasta)
   case "$base" in
-    profile-extractor.md|ranker.md|deep-diver.md)
+    profile-extractor.md|ranker.md|deep-diver.md|pre-dev-interviewer.md|pre-dev-researcher.md|pre-dev-synthesizer.md)
       ln -sf "$f" "$CLAUDE_DIR/agents/$base"
       count_agent=$((count_agent + 1))
       ;;
@@ -64,7 +65,18 @@ for f in "$TINO_HOME"/.claude/agents/*.md; do
 done
 echo "→ $count_agent agents linkados em ~/.claude/agents/"
 
-# 5. bin/tino → ~/.local/bin/tino
+# 5. Symlinks de skills (auto-trigger, sem "/")
+mkdir -p "$CLAUDE_DIR/skills"
+count_skill=0
+for d in "$TINO_HOME"/.claude/skills/*/; do
+  [ -d "$d" ] || continue
+  base="$(basename "$d")"
+  ln -sfn "${d%/}" "$CLAUDE_DIR/skills/$base"
+  count_skill=$((count_skill + 1))
+done
+echo "→ $count_skill skills linkados em ~/.claude/skills/"
+
+# 6. bin/tino → ~/.local/bin/tino
 chmod +x "$TINO_HOME/bin/tino"
 mkdir -p "$BIN_DIR"
 ln -sf "$TINO_HOME/bin/tino" "$BIN_DIR/tino"
@@ -92,6 +104,9 @@ echo "  /tino:setup <vault>          · primeira vez"
 echo "  /tino:refresh                · coleta + rankeia + escreve"
 echo "  /tino:profile-sync           · regenera perfil"
 echo "  /tino:deep-dive <id>         · enriquece favoritado"
+echo ""
+echo "Skill auto-trigger (sem /, basta descrever o que você quer):"
+echo "  tino-pre-dev-research        · 'quero criar uma skill/app/agente que faça X'"
 echo ""
 echo "CLI direto do terminal:"
 echo "  tino setup --vault ~/Obsidian/MeuVault"

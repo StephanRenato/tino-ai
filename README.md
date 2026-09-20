@@ -62,6 +62,9 @@ O Tino entrega 4 capacidades em camadas. Use a tabela como mapa — cada item te
 | Tipo | Item | Pra que serve |
 |------|------|---------------|
 | Skill | `tino-pre-dev-research` | Recebe ideia vaga ("quero criar X"), pesquisa real na web (anti-hallucination), produz 10 docs `.md` em EN prontos pra alimentar planning AIs |
+| Subagent | `pre-dev-interviewer` | Conduz a entrevista por arquétipo (uma pergunta por vez) e escreve `00-brief.md` |
+| Subagent | `pre-dev-researcher` | Pesquisa 1 dimensão (landscape/stacks/architecture/workflows/pitfalls/community-pulse) — despachado 6x em paralelo |
+| Subagent | `pre-dev-synthesizer` | Agrega referências, conflitos em aberto e monta `09-handoff.md` sem pesquisar de novo |
 
 ### 🎓 Modo vibecoder — setup assistido (Onda 1)
 
@@ -442,6 +445,14 @@ Subagents são especialistas convocados pelos comandos. Você não os invoca dir
 | `vibecoder-recommender` | `/tino:vibe-stack` | Roda pipeline `resolve(perfil, curated) + extras aitmpl + render`, grava `_recomendacao.md` com graceful degrade se aitmpl indisponível |
 | `vibecoder-installer` | `/tino:vibe-install` | Gera CLAUDE.md, `_install.sh` (chmod +x), calcula diff de settings.json (sempre confirma) e executa install conforme `modo_autonomia` |
 
+### Subagents da skill `tino-pre-dev-research`
+
+| Agent | Quando dispara | O que faz |
+|-------|---------------|-----------|
+| `pre-dev-interviewer` | skill `tino-pre-dev-research`, após scaffold determinístico | Classifica arquétipo, pergunta profundidade, conduz entrevista (uma pergunta por vez), escreve `00-brief.md` em EN |
+| `pre-dev-researcher` | idem, despachado **6x em paralelo** | Cada instância pesquisa 1 dimensão (WebSearch real, regra anti-hallucination), escreve `0N-<dimensao>.md` |
+| `pre-dev-synthesizer` | idem, após as 6 dimensões prontas | Agrega bibliografia por tier, expõe conflitos em `08-decision-frame.md`, monta `09-handoff.md` universal |
+
 ---
 
 ## Hooks runtime (Onda 2)
@@ -466,14 +477,15 @@ Detalhes completos (debug, install manual, formato do log) em [docs/hooks-vibeco
 ```
 tino-ai/
 ├── .claude/
-│   ├── agents/             # 6 subagents
+│   ├── agents/             # 9 subagents
 │   │   ├── profile-extractor.md, ranker.md, deep-diver.md          # MVP
-│   │   └── vibecoder-{interviewer,recommender,installer}.md         # Onda 1
+│   │   ├── vibecoder-{interviewer,recommender,installer}.md         # Onda 1
+│   │   └── pre-dev-{interviewer,researcher,synthesizer}.md          # Pesquisa pré-dev
 │   ├── commands/           # 8 slash commands
 │   │   ├── tino-{setup,refresh,profile-sync,deep-dive}.md           # MVP
 │   │   └── tino-vibe-{onboard,setup,stack,install}.md               # Onda 1
-│   └── skills/             # Auto-trigger
-│       └── tino-pre-dev-research/
+│   └── skills/             # Auto-trigger (sem "/")
+│       └── tino-pre-dev-research/SKILL.md
 ├── hooks/                  # 2 hooks UserPromptSubmit (Onda 2) + libs core
 │   ├── anti-preguicoso.mjs   # Entry executável
 │   ├── anti-burro.mjs        # Entry executável
@@ -488,7 +500,9 @@ tino-ai/
 │   ├── schemas/
 │   │   ├── perfil-vibecoder.schema.json     # JSON Schema do perfil (Onda 0)
 │   │   └── recomendacao.schema.json         # JSON Schema do recomendacao (Onda 1)
-│   └── prompts/                      # Prompts dos subagents do MVP
+│   └── prompts/
+│       ├── {deep-dive,extract-profile,rank-novelty}.md              # MVP
+│       └── pre-dev-research/         # archetypes, dimensions, anti-hallucination, handoff-template
 ├── lib/                    # Módulos puros (12 arquivos)
 │   ├── fetch.mjs, rss-parser.mjs, frontmatter.mjs, vault-scanner.mjs   # MVP
 │   ├── rank-mock.mjs, adjustments.mjs                                   # MVP
@@ -500,6 +514,7 @@ tino-ai/
 ├── scripts/                # Entradas CLI do MVP
 │   ├── setup.mjs, refresh.mjs, profile-sync.mjs, deep-dive.mjs
 │   ├── fetch-all.mjs, rank.mjs
+│   └── pre-dev-research.mjs   # Scaffold determinístico (slug + 00-brief.md placeholder)
 ├── tests/                  # 147 unit + integration tests (node --test)
 │   ├── *.test.mjs            # 63 MVP + 24 Onda 0 + 30 Onda 1 + 30 Onda 2
 │   ├── fixtures/             # RSS + perfil + recomendacao + aitmpl mock + curated mock

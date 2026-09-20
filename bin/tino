@@ -26,6 +26,7 @@ Subcommands:
   refresh            Coleta fontes + rankeia + escreve novidades no vault
   profile-sync       Regenera _perfil.md preservando contadores
   deep-dive          Enriquece uma novidade favoritada
+  pre-dev-research   Scaffold de research pré-dev (00-brief.md placeholder)
   fetch-all          Só coleta fontes (passo isolado do pipeline)
   rank               Só rankeia (passo isolado do pipeline)
   dashboard:data     Gera dashboard-data.json a partir de um vault
@@ -53,6 +54,7 @@ case "$SUB" in
   fetch-all)        exec node "$TINO_HOME/scripts/fetch-all.mjs" "$@" ;;
   profile-sync)     exec node "$TINO_HOME/scripts/profile-sync.mjs" "$@" ;;
   deep-dive)        exec node "$TINO_HOME/scripts/deep-dive.mjs" "$@" ;;
+  pre-dev-research) exec node "$TINO_HOME/scripts/pre-dev-research.mjs" "$@" ;;
   dashboard:data)   exec node "$TINO_HOME/scripts/generate-dashboard-data.mjs" "$@" ;;
   dashboard:serve)
     cd "$TINO_HOME"
